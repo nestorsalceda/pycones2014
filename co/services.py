@@ -3,17 +3,17 @@ from collections import defaultdict
 from co import errors
 
 class UsersService(object):
-    def __init__(self):
-        self._users = []
+    def __init__(self, users_repository):
+        self._users_repository = users_repository
         self._follows = defaultdict(list)
 
     def register(self, user):
-        if self.is_registered(user):
+        if self._users_repository.exists(user):
             raise errors.UserAlreadyRegisteredError()
-        self._users.append(user)
+        self._users_repository.put(user)
 
     def is_registered(self, user):
-        return user in self._users
+        return self._users_repository.exists(user)
 
     def follow_to(self, user, target):
         if not self.is_registered(user):

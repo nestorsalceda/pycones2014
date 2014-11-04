@@ -1,11 +1,12 @@
-from co import services, errors
+from co import services, errors, repositories
+
 from expects import expect, be_true, raise_error
 
 with description('Register user'):
 
     with before.each:
         self.user = '@foolano'
-        self.service = services.UsersService()
+        self.service = services.UsersService(repositories.UserRepository())
 
     with it('registers a new user'):
         self.service.register(self.user)
