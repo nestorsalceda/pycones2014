@@ -1,28 +1,31 @@
-from collections import defaultdict
-
-from co import errors
+from co import errors, user
 
 class UsersService(object):
     def __init__(self, users_repository):
         self._users_repository = users_repository
-        self._follows = defaultdict(list)
 
-    def register(self, user):
-        if self._users_repository.exists(user):
+    def register(self, nickname):
+        if self._users_repository.exists(nickname):
             raise errors.UserAlreadyRegisteredError()
+
+        self._users_repository.put(user.User(nickname))
+
+    def is_registered(self, nickname):
+        return self._users_repository.exists(nickname)
+
+    def follow_to(self, nickname, target):
+        user = self._find_by_nickname(nickname)
+        other = self._find_by_nickname(target)
+
+        user.follow_to(other.nickname)
+
         self._users_repository.put(user)
 
-    def is_registered(self, user):
-        return self._users_repository.exists(user)
+    def follows_to(self, nickname):
+        return self._find_by_nickname(nickname).following
 
-    def follow_to(self, user, target):
-        if not self.is_registered(user):
-            raise errors.UserDoesNotExist()
+    def _find_by_nickname(self, nickname):
+        if not self.is_registered(nickname):
+            raise errors.UserDoesNotExistError()
 
-        if not self.is_registered(target):
-            raise errors.UserDoesNotExist()
-
-        self._follows[user].append(target)
-
-    def follows_to(self, user):
-        return self._follows[user]
+        return self._users_repository.find_by_nickname(nickname)

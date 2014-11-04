@@ -2,5 +2,5 @@ class UserAlreadyRegisteredError(Exception):
     pass
 
 
-class UserDoesNotExist(Exception):
+class UserDoesNotExistError(Exception):
     pass
