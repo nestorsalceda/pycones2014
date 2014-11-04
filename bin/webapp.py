@@ -1,38 +1,57 @@
 import httplib
+import json
 
-from flask import Flask, request, make_response, jsonify
+import tornado.ioloop
+import tornado.web
+import tornado.options
 
 from co import factory, errors
 
-app = Flask('Co App')
-users_service = factory.create_users_service()
+class UsersHandler(tornado.web.RequestHandler):
 
-@app.route('/users', methods=['POST'])
-def register_user():
-    try:
-        users_service.register(request.json['nickname'])
-        return jsonify(), httplib.CREATED
-    except errors.UserAlreadyRegisteredError:
-        return jsonify({'error': 'Nickname already taken'}), httplib.CONFLICT
+    def initialize(self, users_service):
+        self.users_service = users_service
+
+    def post(self):
+        try:
+            nickname = json.loads(self.request.body)['nickname']
+            self.users_service.register(nickname)
+            self.set_status(httplib.CREATED)
+        except errors.UserAlreadyRegisteredError:
+            self.write({'error': 'Nickname already taken'})
+            self.set_status(httplib.CONFLICT)
 
 
-@app.route('/users/<nickname>/following', methods=['GET', 'POST'])
-def following_users(nickname):
-    if request.method == 'GET':
+class FollowingsHandler(tornado.web.RequestHandler):
+
+    def initialize(self, users_service):
+        self.users_service = users_service
+
+    def get(self, nickname):
         try:
             following = users_service.follows_to(nickname)
-            print following
-            return jsonify({'result': following}), httplib.OK
+            self.write({'result': following})
         except errors.UserDoesNotExistError:
-            return jsonify({'error': 'User does not exist'}), httplib.NOT_FOUND
+            self.write({'error': 'User does not exist'})
+            self.set_status(httplib.NOT_FOUND)
 
-    if request.method == 'POST':
+    def post(self, nickname):
         try:
-            following = users_service.follow_to(nickname, request.json['nickname'])
-            return jsonify(), httplib.CREATED
+            target = json.loads(self.request.body)['nickname']
+            following = users_service.follow_to(nickname, target)
+            self.set_status(httplib.CREATED)
         except errors.UserDoesNotExistError:
-            return jsonify({'error': 'User does not exist'}), httplib.NOT_FOUND
+            self.write({'error': 'User does not exist'})
+            self.set_status(httplib.NOT_FOUND)
 
+
+users_service = factory.create_users_service()
+application = tornado.web.Application([
+    (r'/users', UsersHandler, dict(users_service=users_service)),
+    (r'/users/(?P<nickname>[^/]*)/following', FollowingsHandler, dict(users_service=users_service)),
+], debug=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    tornado.options.parse_command_line()
+    application.listen(5000)
+    tornado.ioloop.IOLoop.instance().start()
