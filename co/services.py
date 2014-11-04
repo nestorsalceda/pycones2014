@@ -16,11 +16,13 @@ class UsersService(object):
         return user in self._users
 
     def follow_to(self, user, target):
-        self._follows[user].append(target)
+        if not self.is_registered(user):
+            raise errors.UserDoesNotExist()
 
-    def is_following_to(self, user, other):
-        return other in self._follows[user]
+        if not self.is_registered(target):
+            raise errors.UserDoesNotExist()
+
+        self._follows[user].append(target)
 
     def follows_to(self, user):
         return self._follows[user]
-
