@@ -1,4 +1,4 @@
-from co import services, errors, repositories
+from co import factory, errors
 
 from expects import expect, be_true, contain, raise_error
 
@@ -6,7 +6,7 @@ with description('Follow user'):
     with before.each:
         self.user = '@foolano'
         self.other_user = '@da_kewl_guru'
-        self.service = services.UsersService(repositories.UserRepository())
+        self.service = factory.create_users_service()
 
     with it('returns all users followed by a user'):
         self.service.register(self.user)
