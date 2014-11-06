@@ -1,4 +1,7 @@
+import json
+
 from co import user as u
+
 
 class UserRepository(object):
 
@@ -26,7 +29,7 @@ class RedisUserRepository(object):
         self._client = redis_client
 
     def put(self, user):
-        self._client.hset(self.KEY, user.nickname, user.following)
+        self._client.hset(self.KEY, user.nickname, json.dumps({"following": user.following, "cos": user.cos}))
 
     def exists(self, user):
         return self._client.hexists(self.KEY, user)
@@ -36,8 +39,13 @@ class RedisUserRepository(object):
 
     def find_by_nickname(self, nickname):
         user = u.User(nickname)
-        for follow in self._client.hget(self.KEY, nickname):
+        raw = json.loads(self._client.hget(self.KEY, nickname))
+
+        for follow in raw['following']:
             user.follow_to(follow)
+
+        for message in raw['cos']:
+            user.publish_co(message)
 
         return user
 
