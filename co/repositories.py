@@ -38,6 +38,9 @@ class RedisUserRepository(object):
         return self._client.delete(self.KEY)
 
     def find_by_nickname(self, nickname):
+        if not self.exists(nickname):
+            return None
+
         user = u.User(nickname)
         raw = json.loads(self._client.hget(self.KEY, nickname))
 

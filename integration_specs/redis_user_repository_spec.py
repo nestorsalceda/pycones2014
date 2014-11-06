@@ -1,6 +1,6 @@
 from co import factory, user as u
 
-from expects import expect, be_true, be_false, contain, equal
+from expects import expect, be_true, be_false, contain, equal, be_none
 
 with describe('Redis User Repository'):
 
@@ -32,7 +32,12 @@ with describe('Redis User Repository'):
             expect(user.cos).to(equal(self.user.cos))
 
     with context('when looking for an unregistered user'):
-        with it('returns false'):
+        with it('checks its existence it returns false'):
             user = '@foolano'
 
             expect(self.repository.exists(user)).to(be_false)
+
+        with it('gets the user it returns None'):
+            user = '@foolano'
+
+            expect(self.repository.find_by_nickname(user)).to(be_none)
