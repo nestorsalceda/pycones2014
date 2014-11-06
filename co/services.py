@@ -34,5 +34,7 @@ class UsersService(object):
         user = self._find_by_nickname(nickname)
         user.publish_co(content)
 
+        self._users_repository.put(user)
+
     def cos_for(self, nickname):
         return self._find_by_nickname(nickname).cos
