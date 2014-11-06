@@ -29,3 +29,10 @@ class UsersService(object):
             raise errors.UserDoesNotExistError()
 
         return self._users_repository.find_by_nickname(nickname)
+
+    def publish_co(self, nickname, content):
+        user = self._find_by_nickname(nickname)
+        user.publish_co(content)
+
+    def cos_for(self, nickname):
+        return self._find_by_nickname(nickname).cos
